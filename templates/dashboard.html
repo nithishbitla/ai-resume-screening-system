@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Resume Dashboard</title>
+</head>
+<body>
+  <h2>Uploaded Resumes</h2>
+  <table border="1">
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Resume</th>
+    </tr>
+    {% for r in resumes %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.email }}</td>
+      <td>{{ r.role }}</td>
+      <td><a href="/resume/{{ r.file }}" target="_blank">View Resume</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Resume</title>
+  <script>
+    function setJobDescription() {
+      const descriptions = {
+        "Data Scientist": "We are looking for a Data Scientist with experience in Python, machine learning, and data analysis. Knowledge of TensorFlow or PyTorch is a plus. Candidates should be able to work with large datasets and communicate insights effectively.",
+        "Frontend Developer": "We are seeking a Frontend Developer skilled in HTML, CSS, JavaScript, and frameworks like React or Angular. The ideal candidate should have experience creating responsive user interfaces and working with APIs.",
+        "AI Engineer": "Looking for an AI Engineer with hands-on experience in NLP, machine learning models, and frameworks such as PyTorch or TensorFlow. Strong Python skills and problem-solving abilities are required."
+      };
+
+      const selectedRole = document.getElementById("role").value;
+      document.getElementById("job_desc").value = descriptions[selectedRole] || "";
+    }
+  </script>
+</head>
+<body>
+  <h2>Upload Your Resume</h2>
+  <form action="/upload" method="post" enctype="multipart/form-data">
+    Name: <input type="text" name="name" required><br><br>
+
+    Select Role:
+    <select id="role" name="role" onchange="setJobDescription()" required>
+      <option value="">--Select Job Role--</option>
+      <option value="Data Scientist">Data Scientist</option>
+      <option value="Frontend Developer">Frontend Developer</option>
+      <option value="AI Engineer">AI Engineer</option>
+    </select><br><br>
+
+    Job Description:
+    <textarea name="job_desc" id="job_desc" readonly required></textarea><br><br>
+
+    Resume:
+    <input type="file" name="resume" accept=".pdf,.docx" required><br><br>
+
+    <input type="submit" value="Upload Resume">
+  </form>
+</body>
+</html>

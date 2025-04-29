@@ -1,40 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Upload Resume</title>
   <script>
-    function setJobDescription() {
-      const descriptions = {
-        "Data Scientist": "We are looking for a Data Scientist with experience in Python, machine learning, and data analysis. Knowledge of TensorFlow or PyTorch is a plus. Candidates should be able to work with large datasets and communicate insights effectively.",
-        "Frontend Developer": "We are seeking a Frontend Developer skilled in HTML, CSS, JavaScript, and frameworks like React or Angular. The ideal candidate should have experience creating responsive user interfaces and working with APIs.",
-        "AI Engineer": "Looking for an AI Engineer with hands-on experience in NLP, machine learning models, and frameworks such as PyTorch or TensorFlow. Strong Python skills and problem-solving abilities are required."
-      };
+    const jobDescriptions = {
+      "Data Scientist": "Analyze data, build models, and derive insights to support business decisions.",
+      "Frontend Developer": "Develop responsive UI using HTML, CSS, JavaScript, and React.",
+      "Backend Developer": "Design server-side logic, databases, and APIs.",
+      "Machine Learning Engineer": "Build ML pipelines, deploy models, and monitor performance.",
+      "Product Manager": "Coordinate between teams, define product strategy, and deliver features."
+    };
 
-      const selectedRole = document.getElementById("role").value;
-      document.getElementById("job_desc").value = descriptions[selectedRole] || "";
+    function updateJobDescription() {
+      const role = document.getElementById("role").value;
+      document.getElementById("job_desc").value = jobDescriptions[role] || "";
     }
   </script>
 </head>
 <body>
-  <h2>Upload Your Resume</h2>
+  <h1>Upload Resume</h1>
   <form action="/upload" method="post" enctype="multipart/form-data">
-    Name: <input type="text" name="name" required><br><br>
+    <label>Name:</label>
+    <input type="text" name="name" value="{{ user.name }}" required><br><br>
 
-    Select Role:
-    <select id="role" name="role" onchange="setJobDescription()" required>
-      <option value="">--Select Job Role--</option>
+    <label>Role:</label>
+    <select name="role" id="role" onchange="updateJobDescription()" required>
+      <option value="">--Select Role--</option>
       <option value="Data Scientist">Data Scientist</option>
       <option value="Frontend Developer">Frontend Developer</option>
-      <option value="AI Engineer">AI Engineer</option>
+      <option value="Backend Developer">Backend Developer</option>
+      <option value="Machine Learning Engineer">Machine Learning Engineer</option>
+      <option value="Product Manager">Product Manager</option>
     </select><br><br>
 
-    Job Description:
-    <textarea name="job_desc" id="job_desc" readonly required></textarea><br><br>
+    <label>Job Description:</label><br>
+    <textarea id="job_desc" name="job_desc" rows="4" cols="50" required readonly></textarea><br><br>
 
-    Resume:
-    <input type="file" name="resume" accept=".pdf,.docx" required><br><br>
+    <label>Upload Resume (PDF):</label>
+    <input type="file" name="resume" accept=".pdf" required><br><br>
 
-    <input type="submit" value="Upload Resume">
+    <button type="submit">Submit</button>
   </form>
 </body>
 </html>

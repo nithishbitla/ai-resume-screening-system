@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Dashboard</title>
+</head>
+<body>
+    <h1>Host Dashboard</h1>
+    <h2>Rank Resumes</h2>
+
+    <form action="/host-dashboard" method="POST">
+        <label for="role">Select Role:</label>
+        <select name="role" id="role">
+            <option value="">--Choose a Role--</option>
+            {% for role, desc in roles.items() %}
+                <option value="{{ role }}">{{ role }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="job_desc">Or Enter Custom Job Description:</label>
+        <textarea name="job_desc" id="job_desc" rows="4" cols="50">{{ job_description }}</textarea>
+
+        <button type="submit">Rank Resumes</button>
+    </form>
+
+    <h2>Uploaded Resumes (Ranked)</h2>
+    <ol>
+        {% for resume in resumes %}
+        <li>
+            <p>Name: {{ resume.name }}</p>
+            <p>Role: {{ resume.role }}</p>
+            <p>Score: {{ resume.score }}</p>
+            <a href="/resume/{{ resume.file }}" target="_blank">View Resume</a>
+        </li>
+        {% endfor %}
+    </ol>
+
+    <!-- Download Results as CSV Button -->
+    <a href="/download-csv" download="ranked_resumes.csv">
+        <button>Download Ranked Results as CSV</button>
+    </a>
+</body>
+</html>

@@ -1,55 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login with Google</title>
+  <meta charset="UTF-8">
+  <title>User Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Firebase Modular v9+ Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBYVdr15uRbHp8Z7BNKmh5g3fwSMRFtC0E",
+      authDomain: "nithish-32bc8.firebaseapp.com",
+      projectId: "nithish-32bc8",
+      storageBucket: "nithish-32bc8.appspot.com",  // corrected bucket URL
+      messagingSenderId: "193597687371",
+      appId: "1:193597687371:web:c53a73bc5ba2af8f1fafce"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // Login function
+    window.googleLogin = async function () {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const token = await result.user.getIdToken();
+
+        const response = await fetch('/verify-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          window.location.href = '/upload';
+        } else {
+          alert("Authentication failed. Please try again.");
+        }
+      } catch (error) {
+        console.error("Login Error:", error);
+        alert("Google Sign-In failed.");
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 10%;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4285F4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #357ae8;
+    }
+  </style>
 </head>
 <body>
-  <h2>AI Resume Screening System - Login</h2>
+  <h1>User Login</h1>
   <button onclick="googleLogin()">Sign in with Google</button>
-
-  <!-- Firebase JS SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyBYVdr15uRbHp8Z7BNKmh5g3fwSMRFtC0E",
-        authDomain: "nithish-32bc8.firebaseapp.com",
-        projectId: "nithish-32bc8",
-        storageBucket: "nithish-32bc8.firebasestorage.app",
-        messagingSenderId: "193597687371",
-        appId: "1:193597687371:web:c53a73bc5ba2af8f1fafce"
-    };
-    firebase.initializeApp(firebaseConfig);
-
-    function googleLogin() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      firebase.auth().signInWithPopup(provider)
-        .then(result => {
-          return result.user.getIdToken();
-        })
-        .then(idToken => {
-          return fetch('/verify-token', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ token: idToken })
-          });
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            window.location.href = '/upload'; // Redirect after success
-          } else {
-            alert("Login failed");
-          }
-        })
-        .catch(error => {
-          console.error("Login Error:", error);
-          alert("Authentication failed: " + error.message);
-        });
-    }
-  </script>
-</body>
-</html>
+  <p>Are you the host? <a href="/host-login">Login here</a

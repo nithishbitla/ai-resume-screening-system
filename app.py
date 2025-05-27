@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, jsonify, send_from_directory, make_response
 from werkzeug.utils import secure_filename
 import os
+import json
 import firebase_admin
 from firebase_admin import credentials, auth
 from PyPDF2 import PdfReader
@@ -10,8 +11,12 @@ import csv
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Replace with a secure key
 
-# Firebase initialization
-cred = credentials.Certificate("firebase_config.json")
+# Firebase initialization using environment variable
+firebase_creds_json = os.getenv("GOOGLE_SERVICE_ACCOUNT")
+if not firebase_creds_json:
+    raise ValueError("Missing GOOGLE_SERVICE_ACCOUNT environment variable")
+firebase_creds = json.loads(firebase_creds_json)
+cred = credentials.Certificate(firebase_creds)
 firebase_admin.initialize_app(cred)
 
 # Upload folder
@@ -80,12 +85,11 @@ def host_dashboard():
     if request.method == 'POST':
         role = request.form['role']
         job_description = request.form['job_desc'] if not role else ROLE_JOB_DESCRIPTION.get(role, '')
-        
-        # Rank resumes based on the job description
+
         ranked_resumes = rank_resumes(job_description)
-        return render_template('host_dashboard.html', resumes=ranked_resumes, 
+        return render_template('host_dashboard.html', resumes=ranked_resumes,
                                job_description=job_description, roles=ROLE_JOB_DESCRIPTION)
-    
+
     return render_template('host_dashboard.html', resumes=uploaded_resumes, roles=ROLE_JOB_DESCRIPTION)
 
 @app.route('/upload')
@@ -93,7 +97,6 @@ def upload_page():
     if 'user' not in session:
         return redirect('/')
     return render_template('upload.html', user=session['user'], roles=list(ROLE_JOB_DESCRIPTION.keys()))
-
 
 @app.route('/upload', methods=['POST'])
 def upload_resume():
@@ -148,13 +151,11 @@ def download_csv():
     if 'host' not in session:
         return redirect('/host-login')
 
-    # Create CSV from ranked resumes
     output = []
     output.append(['Name', 'Email', 'Role', 'Score', 'Filename'])
     for r in uploaded_resumes:
         output.append([r['name'], r['email'], r['role'], r.get('score', 0), r['file']])
 
-    # Send CSV response
     response = make_response('\n'.join([','.join(map(str, row)) for row in output]))
     response.headers['Content-Disposition'] = 'attachment; filename=ranked_resumes.csv'
     response.headers['Content-Type'] = 'text/csv'

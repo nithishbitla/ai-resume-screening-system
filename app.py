@@ -6,29 +6,23 @@ from firebase_admin import credentials, auth
 from PyPDF2 import PdfReader
 from sentence_transformers import SentenceTransformer, util
 import csv
-import secrets
 
-# Flask app initialization
-app = Flask(__name__, template_folder="../templates", static_folder="../static")
-
-# Load or generate a secret key securely
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Replace with a secure key
 
 # Firebase initialization
 cred = credentials.Certificate("firebase_config.json")
 firebase_admin.initialize_app(cred)
 
-# Upload folder setup
+# Upload folder
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# In-memory storage for uploaded resumes
+# In-memory storage for resumes
 uploaded_resumes = []
-
-# Dummy host credentials (replace with real ones or use Firebase Auth for host too)
-host_credentials = {'email': 'host@example.com', 'password': 'host_password'}
+host_credentials = {'email': 'host@example.com', 'password': 'host_password'}  # Dummy credentials
 
 # Role-Job Description Mapping
 ROLE_JOB_DESCRIPTION = {
@@ -37,7 +31,7 @@ ROLE_JOB_DESCRIPTION = {
     'Product Manager': 'Oversee product lifecycle, gather requirements, and prioritize features based on business goals.'
 }
 
-# Load AI model for similarity calculation
+# Load the AI model once globally
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 @app.route('/')
@@ -86,9 +80,12 @@ def host_dashboard():
     if request.method == 'POST':
         role = request.form['role']
         job_description = request.form['job_desc'] if not role else ROLE_JOB_DESCRIPTION.get(role, '')
+        
+        # Rank resumes based on the job description
         ranked_resumes = rank_resumes(job_description)
-        return render_template('host_dashboard.html', resumes=ranked_resumes, job_description=job_description, roles=ROLE_JOB_DESCRIPTION)
-
+        return render_template('host_dashboard.html', resumes=ranked_resumes, 
+                               job_description=job_description, roles=ROLE_JOB_DESCRIPTION)
+    
     return render_template('host_dashboard.html', resumes=uploaded_resumes, roles=ROLE_JOB_DESCRIPTION)
 
 @app.route('/upload')
@@ -96,6 +93,7 @@ def upload_page():
     if 'user' not in session:
         return redirect('/')
     return render_template('upload.html', user=session['user'], roles=list(ROLE_JOB_DESCRIPTION.keys()))
+
 
 @app.route('/upload', methods=['POST'])
 def upload_resume():
@@ -108,7 +106,7 @@ def upload_resume():
     resume = request.files['resume']
     email = session['user']['email']
 
-    filename = secure_filename(f"{name}_{email.replace('@', '_')}_{resume.filename}")
+    filename = secure_filename(f"{name}{email.replace('@', '')}_{resume.filename}")
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     resume.save(filepath)
 
@@ -127,6 +125,7 @@ def upload_resume():
 def resume(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+# AI-powered Resume Ranking
 def rank_resumes(job_description):
     ranked_resumes = []
     job_embedding = model.encode(job_description, convert_to_tensor=True)
@@ -149,10 +148,13 @@ def download_csv():
     if 'host' not in session:
         return redirect('/host-login')
 
-    output = [['Name', 'Email', 'Role', 'Score', 'Filename']]
+    # Create CSV from ranked resumes
+    output = []
+    output.append(['Name', 'Email', 'Role', 'Score', 'Filename'])
     for r in uploaded_resumes:
         output.append([r['name'], r['email'], r['role'], r.get('score', 0), r['file']])
 
+    # Send CSV response
     response = make_response('\n'.join([','.join(map(str, row)) for row in output]))
     response.headers['Content-Disposition'] = 'attachment; filename=ranked_resumes.csv'
     response.headers['Content-Type'] = 'text/csv'
@@ -163,6 +165,5 @@ def logout():
     session.clear()
     return redirect('/')
 
-# Vercel requires exposing the Flask app as 'handler'
-def handler(environ, start_response):
-    return app(environ, start_response)
+if __name__ == '__main__':
+    app.run(debug=True)

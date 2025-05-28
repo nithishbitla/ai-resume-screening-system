@@ -1,12 +1,23 @@
-spacy>=3.7.0,<3.8.0
-thinc>=8.2.2,<8.3.0
+# Core dependencies
+Flask==3.1.0
+gunicorn
+
+# Firebase Admin SDK
 firebase-admin==6.8.0
 google-cloud-firestore>=2.19.0
-Flask==3.1.0
+
+# NLP and resume ranking
 sentence-transformers==2.7.0
 scikit-learn==1.6.1
+spacy>=3.7.0,<3.8.0
+thinc>=8.2.2,<8.3.0
 nltk==3.9.1
-pandas==2.2.3
 numpy==2.2.2
+pandas==2.2.3
+
+# PDF parsing
+PyPDF2==3.0.1
+
+# Utilities
+python-dotenv  # for loading .env in development
 protobuf==5.29.4
-gunicorn

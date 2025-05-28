@@ -9,3 +9,4 @@ nltk==3.9.1
 pandas==2.2.3
 numpy==2.2.2
 protobuf==5.29.4
+gunicorn

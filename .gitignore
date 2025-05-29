@@ -11,3 +11,4 @@ uploads/
 .DS_Store
 .idea/
 *.sqlite3
+".env" 

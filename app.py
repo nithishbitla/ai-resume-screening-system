@@ -39,7 +39,7 @@ if not firebase_creds_json:
 try:
     firebase_creds = json.loads(firebase_creds_json)
 
-    # ✅ Fix private_key formatting
+    # \u2705 Fix private_key formatting
     if 'private_key' in firebase_creds:
         firebase_creds['private_key'] = firebase_creds['private_key'].replace('\\n', '\n')
 
@@ -70,19 +70,15 @@ ROLE_JOB_DESCRIPTION = {
     'Product Manager': 'Oversee product lifecycle, gather requirements, and prioritize features based on business goals.'
 }
 
-# Load sentence transformer model once globally for performance
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
+# \u2705 Lazy-load model on demand to reduce memory usage
+model = None
 
 @app.route('/')
 def index():
-    """Login page route."""
     return render_template('login.html')
-
 
 @app.route('/verify-token', methods=['POST'])
 def verify_token():
-    """Verify Firebase ID token sent from client and set session user."""
     try:
         data = request.get_json()
         id_token = data.get('token')
@@ -102,10 +98,8 @@ def verify_token():
         print(f"[Token Verification Error] {e}")
         return jsonify({'success': False, 'error': str(e)}), 401
 
-
 @app.route('/host-login', methods=['GET', 'POST'])
 def host_login():
-    """Host login route."""
     if request.method == 'POST':
         email = request.form.get('email', '')
         password = request.form.get('password', '')
@@ -116,10 +110,8 @@ def host_login():
             return render_template('host_login.html', error="Invalid credentials")
     return render_template('host_login.html')
 
-
 @app.route('/host-dashboard', methods=['GET', 'POST'])
 def host_dashboard():
-    """Host dashboard to rank resumes."""
     if not session.get('host'):
         return redirect('/host-login')
 
@@ -128,7 +120,6 @@ def host_dashboard():
 
     if request.method == 'POST':
         role = request.form.get('role', '').strip()
-        # Use mapped job description or custom input
         job_description = ROLE_JOB_DESCRIPTION.get(role) or request.form.get('job_desc', '').strip()
         if job_description:
             ranked_resumes = rank_resumes(job_description)
@@ -140,18 +131,14 @@ def host_dashboard():
         roles=ROLE_JOB_DESCRIPTION
     )
 
-
 @app.route('/upload')
 def upload_page():
-    """Page for users to upload resumes."""
     if not session.get('user'):
         return redirect('/')
     return render_template('upload.html', user=session['user'], roles=list(ROLE_JOB_DESCRIPTION.keys()))
 
-
 @app.route('/upload', methods=['POST'])
 def upload_resume():
-    """Handle resume upload by user."""
     if not session.get('user'):
         return redirect('/')
 
@@ -169,7 +156,6 @@ def upload_resume():
             error="Please fill all fields and select a resume file."
         )
 
-    # Secure filename with email + timestamp to avoid clashes
     timestamp = int(time.time())
     safe_email = email.replace('@', '_at_').replace('.', '_dot_')
     filename = secure_filename(f"{name}_{safe_email}_{timestamp}_{resume_file.filename}")
@@ -187,19 +173,15 @@ def upload_resume():
 
     return render_template('upload_success.html', user=session['user'])
 
-
 @app.route('/resume/<filename>')
 def resume(filename):
-    """Serve uploaded resume files."""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-
-
 def rank_resumes(job_description: str):
-    """
-    Rank resumes by semantic similarity between job description and resume text.
-    Returns resumes sorted by similarity score descending.
-    """
+    global model
+    if model is None:
+        model = SentenceTransformer('paraphrase-MiniLM-L6-v2')  # lighter model
+
     ranked = []
     job_embedding = model.encode(job_description, convert_to_tensor=True)
 
@@ -216,10 +198,8 @@ def rank_resumes(job_description: str):
 
     return sorted(ranked, key=lambda x: x['score'], reverse=True)
 
-
 @app.route('/download-csv')
 def download_csv():
-    """Download CSV file of ranked resumes (host only)."""
     if not session.get('host'):
         return redirect('/host-login')
 
@@ -234,13 +214,10 @@ def download_csv():
     response.headers['Content-Type'] = 'text/csv'
     return response
 
-
 @app.route('/logout')
 def logout():
-    """Clear session and logout user."""
     session.clear()
     return redirect('/')
-
 
 if __name__ == '__main__':
     app.run(debug=True)
